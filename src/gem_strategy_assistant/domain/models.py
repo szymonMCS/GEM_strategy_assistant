@@ -60,7 +60,7 @@ class ETF(Enum):
     @property
     def risk_level(self) -> str:
         return self.value.risk_level
-    
+
     @classmethod
     def from_any_ticker(cls, ticker: str) -> "ETF":
         """
@@ -190,4 +190,13 @@ class Signal:
             return f"HOLD {self.recommended_etf.name}"
         if self.previous_etf:
             return f"SWITCH {self.previous_etf.name} -> {self.recommended_etf.name}"
-        return f"BUY {self.recommended_etf.name}"       
+        return f"BUY {self.recommended_etf.name}"
+
+    @property
+    def action_emoji(self) -> str:
+        """Get emoji representation of action"""
+        if not self.requires_rebalance:
+            return "✋"
+        if self.previous_etf:
+            return "🔄"
+        return "💰"
