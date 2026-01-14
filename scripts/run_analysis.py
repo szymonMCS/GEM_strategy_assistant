@@ -1,8 +1,11 @@
+from dataclasses import replace
+
 from momentum_assistant.domain import ETF
 from momentum_assistant.domain.strategy import MomentumStrategy
 from momentum_assistant.config import settings, get_stooq_link
 from momentum_assistant.infrastructure import YahooFinanceProvider, YahooFinanceError
 from momentum_assistant.infrastructure.persistence import Database, SignalRepository
+from momentum_assistant.infrastructure.llm import ReportGenerator, LLMError
 
 
 def main():
@@ -26,12 +29,9 @@ def main():
     
     if previous_signal:
         print(f"\n   Poprzedni sygnał: {previous_signal.recommended_etf.name}")
-        print(f"   z dnia: {previous_signal.created_at.date()}")
-    else:
-        print("\n   Brak poprzednich sygnałów w bazie")
     
     start, end = strategy.get_analysis_period()
-    print(f"\n   Okres analizy: {start.date()} → {end.date()}")
+    print(f"\n   Okres: {start.date()} → {end.date()}")
     
     print("\n   Pobieranie danych...")
     try:
@@ -44,20 +44,26 @@ def main():
     ranking.print_table()
     
     signal = strategy.generate_signal(ranking, previous_etf=previous_etf)
+    stooq_link = get_stooq_link(start, end)
+    
+    report = None
+    if ReportGenerator.is_available():
+        print("\n   Generowanie raportu AI...")
+        try:
+            generator = ReportGenerator()
+            report = generator.generate(signal, stooq_link)
+            signal = replace(signal, report=report, stooq_link=stooq_link)
+            print(f"\n   RAPORT:\n{report}")
+        except LLMError as e:
+            print(f"      Błąd generowania raportu: {e}")
+    else:
+        print("\n   Brak OPENAI_API_KEY - pomijam raport AI")
     
     signal_id = repo.save(signal)
     print(f"\n   Zapisano sygnał #{signal_id}")
     
     print(f"\n   SYGNAŁ: {signal.action}")
-    
-    history = repo.get_history(limit=5)
-    if len(history) > 1:
-        print(f"\n   Ostatnie {len(history)} sygnałów:")
-        for s in history:
-            print(f"   {s.created_at.date()}: {s.recommended_etf.name} "
-                  f"({s.ranking.winner_momentum*100:+.1f}%)")
-    
-    print(f"\n   Stooq: {get_stooq_link(start, end)}")
+    print(f"\n   Stooq: {stooq_link}")
     print("\n   Analiza zakończona!")
 
 
