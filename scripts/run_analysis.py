@@ -1,10 +1,8 @@
 from momentum_assistant.domain import ETF
 from momentum_assistant.domain.strategy import MomentumStrategy
 from momentum_assistant.config import settings, get_stooq_link
-from momentum_assistant.infrastructure import (
-    StooqProvider, StooqError,
-    YahooFinanceProvider, YahooFinanceError
-)
+from momentum_assistant.infrastructure import YahooFinanceProvider, YahooFinanceError
+from momentum_assistant.infrastructure.persistence import Database, SignalRepository
 
 
 def main():
@@ -15,44 +13,51 @@ def main():
     settings.print_status()
     settings.setup_logging()
     
+    db = Database(settings.db_path)
+    repo = SignalRepository(db)
     strategy = MomentumStrategy(
         lookback_months=settings.lookback_months,
         skip_months=settings.skip_months
     )
+    provider = YahooFinanceProvider()
+    
+    previous_signal = repo.get_latest()
+    previous_etf = previous_signal.recommended_etf if previous_signal else None
+    
+    if previous_signal:
+        print(f"\n   Poprzedni sygnał: {previous_signal.recommended_etf.name}")
+        print(f"   z dnia: {previous_signal.created_at.date()}")
+    else:
+        print("\n   Brak poprzednich sygnałów w bazie")
+    
     start, end = strategy.get_analysis_period()
     print(f"\n   Okres analizy: {start.date()} → {end.date()}")
-
-    # Try STOOQ first (primary source), fallback to Yahoo Finance
-    price_data = None
-
-    print("\n   Pobieranie danych ze STOOQ (główne źródło)...")
+    
+    print("\n   Pobieranie danych...")
     try:
-        provider = StooqProvider(max_retries=3)
         price_data = provider.get_all_etf_data(start, end)
-        print("   Źródło: STOOQ")
-    except StooqError as e:
-        print(f"   STOOQ niedostępny: {e}")
-        print("\n   Próbuję Yahoo Finance (backup)...")
-        try:
-            provider = YahooFinanceProvider(max_retries=3)
-            price_data = provider.get_all_etf_data(start, end)
-            print("   Źródło: Yahoo Finance")
-        except YahooFinanceError as e2:
-            print(f"\n   Błąd pobierania danych: {e2}")
-            print("   Sprawdź połączenie z internetem")
-            return
+    except YahooFinanceError as e:
+        print(f"\n   Błąd: {e}")
+        return
     
     ranking = strategy.calculate_ranking(price_data)
     ranking.print_table()
     
-    signal = strategy.generate_signal(ranking, previous_etf=None)
+    signal = strategy.generate_signal(ranking, previous_etf=previous_etf)
+    
+    signal_id = repo.save(signal)
+    print(f"\n   Zapisano sygnał #{signal_id}")
+    
     print(f"\n   SYGNAŁ: {signal.action}")
-    print(f"   Winner: {ranking.winner.display_name}")
-    print(f"   Momentum: {ranking.winner_momentum*100:+.2f}%")
     
-    print(f"\n   Porównaj na Stooq:")
-    print(f"   {get_stooq_link(start, end)}")
+    history = repo.get_history(limit=5)
+    if len(history) > 1:
+        print(f"\n   Ostatnie {len(history)} sygnałów:")
+        for s in history:
+            print(f"   {s.created_at.date()}: {s.recommended_etf.name} "
+                  f"({s.ranking.winner_momentum*100:+.1f}%)")
     
+    print(f"\n   Stooq: {get_stooq_link(start, end)}")
     print("\n   Analiza zakończona!")
 
 
