@@ -175,5 +175,13 @@ def status():
     settings.print_status()
 
 
+@cli.command()
+def dashboard():
+    """Uruchom web dashboard (Gradio)."""
+    from gem_strategy_assistant.presentation.gradio_app import main
+    console.print(f"\n🌐 Uruchamiam dashboard na porcie {settings.gradio_port}...")
+    main()
+
+
 if __name__ == "__main__":
     cli()
