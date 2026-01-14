@@ -79,11 +79,17 @@ class MomentumStrategy:
         etfs_in_data = [pd.etf for pd in price_data]
         if len(etfs_in_data) != len(set(etfs_in_data)):
             raise ValueError("Duplicate ETF entries in price_data")
-        
-        periods = {(pd.start_date.date(), pd.end_date.date()) for pd in price_data}
-        if len(periods) > 1:
+
+        # Allow small date variations (up to 10 days) due to different trading calendars
+        start_dates = [pd.start_date.date() for pd in price_data]
+        end_dates = [pd.end_date.date() for pd in price_data]
+        start_diff = (max(start_dates) - min(start_dates)).days
+        end_diff = (max(end_dates) - min(end_dates)).days
+
+        if start_diff > 10 or end_diff > 10:
             raise ValueError(
-                f"Inconsistent analysis periods in price_data: {periods}"
+                f"Inconsistent analysis periods: start dates differ by {start_diff} days, "
+                f"end dates differ by {end_diff} days (max allowed: 10)"
             )
         
         momentum_list = [
