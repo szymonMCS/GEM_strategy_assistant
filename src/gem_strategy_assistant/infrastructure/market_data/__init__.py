@@ -1,6 +1,7 @@
 from .protocols import MarketDataProvider
 from .yahoo_finance import YahooFinanceProvider, YahooFinanceError
 from .stooq import StooqProvider, StooqError
+from .composite_provider import CompositeMarketDataProvider
 
 __all__ = [
     "MarketDataProvider",
@@ -8,4 +9,5 @@ __all__ = [
     "YahooFinanceError", 
     "StooqProvider", 
     "StooqError",
+    "CompositeMarketDataProvider",
 ]

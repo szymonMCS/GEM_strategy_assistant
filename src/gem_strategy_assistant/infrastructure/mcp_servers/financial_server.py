@@ -4,16 +4,15 @@ from typing import Optional
 
 from gem_strategy_assistant.domain import ETF
 from gem_strategy_assistant.domain.strategy import MomentumStrategy
-from gem_strategy_assistant.infrastructure.market_data import YahooFinanceProvider
+from gem_strategy_assistant.infrastructure.market_data import CompositeMarketDataProvider
 from gem_strategy_assistant.config import settings, get_stooq_link
 
 mcp = FastMCP(
-    name="momentum-financial-server",
-    description="Financial data and momentum calculation tools"
+    name="momentum-financial-server"
 )
 
 _strategy: Optional[MomentumStrategy] = None
-_provider: Optional[YahooFinanceProvider] = None
+_provider: Optional[CompositeMarketDataProvider] = None
 
 def get_strategy() -> MomentumStrategy:
     global _strategy
@@ -25,10 +24,10 @@ def get_strategy() -> MomentumStrategy:
     return _strategy
 
 
-def get_provider() -> YahooFinanceProvider:
+def get_provider() -> CompositeMarketDataProvider:
     global _provider
     if _provider is None:
-        _provider = YahooFinanceProvider()
+        _provider = CompositeMarketDataProvider()
     return _provider
 
 
