@@ -1,4 +1,5 @@
 import logging
+import sqlite3
 from typing import Annotated, TypedDict, Literal
 from datetime import datetime
 
@@ -39,19 +40,20 @@ class MomentumAgent:
     ):
         """
         Initialize the momentum agent.
-        
+
         Args:
             checkpoint_path: Path to SQLite checkpoint database
         """
         self.checkpoint_path = checkpoint_path
-        
+        self.checkpoint_conn = sqlite3.connect(checkpoint_path, check_same_thread=False)
+
         self.analyze_use_case = AnalyzeAndRecommendUseCase()
         self.history_use_case = GetSignalHistoryUseCase()
         self.research_etf_use_case = ResearchETFUseCase()
         self.market_outlook_use_case = ResearchMarketOutlookUseCase()
-        
+
         self.graph = self._build_graph()
-        
+
         logger.info(f"MomentumAgent initialized with checkpoints at {checkpoint_path}")
 
     def _build_graph(self) -> StateGraph:
@@ -85,10 +87,10 @@ class MomentumAgent:
         workflow.add_edge("market_outlook", "finalize")
         
         workflow.add_edge("finalize", END)
-        
-        checkpointer = SqliteSaver.from_conn_string(self.checkpoint_path)
+
+        checkpointer = SqliteSaver(self.checkpoint_conn)
         compiled = workflow.compile(checkpointer=checkpointer)
-        
+
         logger.info("LangGraph workflow compiled with checkpointing")
         return compiled
 
@@ -257,8 +259,9 @@ class MomentumAgent:
             "error": None,
             "completed": False,
         }
-        
-        final_state = self.graph.invoke(initial_state)
+
+        config = {"configurable": {"thread_id": "1"}}
+        final_state = self.graph.invoke(initial_state, config)
         
         if final_state.get("error"):
             logger.error(f"Workflow failed: {final_state['error']}")
@@ -291,8 +294,9 @@ class MomentumAgent:
             "error": None,
             "completed": False,
         }
-        
-        final_state = self.graph.invoke(initial_state)
+
+        config = {"configurable": {"thread_id": "1"}}
+        final_state = self.graph.invoke(initial_state, config)
         
         if final_state.get("error"):
             logger.error(f"Workflow failed: {final_state['error']}")
@@ -325,8 +329,9 @@ class MomentumAgent:
             "error": None,
             "completed": False,
         }
-        
-        final_state = self.graph.invoke(initial_state)
+
+        config = {"configurable": {"thread_id": "1"}}
+        final_state = self.graph.invoke(initial_state, config)
         
         if final_state.get("error"):
             logger.error(f"Workflow failed: {final_state['error']}")
@@ -360,8 +365,9 @@ class MomentumAgent:
             "error": None,
             "completed": False,
         }
-        
-        final_state = self.graph.invoke(initial_state)
+
+        config = {"configurable": {"thread_id": "1"}}
+        final_state = self.graph.invoke(initial_state, config)
         
         if final_state.get("error"):
             logger.error(f"Workflow failed: {final_state['error']}")

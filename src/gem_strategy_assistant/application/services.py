@@ -84,16 +84,16 @@ class AnalysisService:
             raise
         
         try:
-            ranking = self.strategy.rank_etfs(price_data, end_date)
-            logger.info(f"Calculated momentum ranking: {len(ranking)} ETFs ranked")
+            ranking = self.strategy.calculate_ranking(price_data)
+            logger.info(f"Calculated momentum ranking: {len(ranking.rankings)} ETFs ranked")
         except Exception as e:
             logger.error(f"Failed to calculate momentum ranking: {e}")
             raise
         
         try:
-            signal = self.strategy.generate_signal(ranking, end_date)
+            signal = self.strategy.generate_signal(ranking)
             logger.info(
-                f"✅ Analysis complete: {signal.action} {signal.recommended_etf.name if signal.recommended_etf else 'NONE'}"
+                f"✅ Analysis complete: {signal.recommended_etf.name if signal.recommended_etf else 'NONE'}"
             )
             return signal
         except Exception as e:
@@ -241,14 +241,14 @@ class SignalPersistenceService:
     def save_signal(self, signal: Signal, ranking: list[tuple[ETF, float]]) -> None:
         """
         Save a signal with its ranking to the database.
-        
+
         Args:
             signal: Signal to save
             ranking: Full ETF ranking with scores
         """
         try:
-            self.signal_repository.save_signal(signal, ranking)
-            logger.info(f"✅ Signal saved: {signal.action} {signal.recommended_etf.name if signal.recommended_etf else 'NONE'}")
+            self.signal_repository.save(signal)
+            logger.info(f"✅ Signal saved: {signal.recommended_etf.name if signal.recommended_etf else 'NONE'}")
         except Exception as e:
             logger.error(f"Failed to save signal: {e}")
             raise
@@ -256,14 +256,14 @@ class SignalPersistenceService:
     def get_latest_signal(self) -> Optional[Signal]:
         """
         Retrieve the most recent signal.
-        
+
         Returns:
             Latest signal or None if no signals exist
         """
         try:
-            signal = self.signal_repository.get_latest_signal()
+            signal = self.signal_repository.get_latest()
             if signal:
-                logger.info(f"Retrieved latest signal: {signal.action} from {signal.date}")
+                logger.info(f"Retrieved latest signal: {signal.action} from {signal.created_at}")
             else:
                 logger.info("No signals found in database")
             return signal
@@ -274,18 +274,17 @@ class SignalPersistenceService:
     def get_signal_history(self, days: int = 30) -> list[Signal]:
         """
         Retrieve signal history.
-        
+
         Args:
             days: Number of days to look back (default: 30)
-            
+
         Returns:
             List of signals from the specified period
         """
-        since = datetime.now() - timedelta(days=days)
-        
         try:
-            signals = self.signal_repository.get_signals_since(since)
-            logger.info(f"Retrieved {len(signals)} signals from last {days} days")
+            # Get all signals (limited by repository)
+            signals = self.signal_repository.get_history(limit=100)
+            logger.info(f"Retrieved {len(signals)} signals")
             return signals
         except Exception as e:
             logger.error(f"Failed to retrieve signal history: {e}")

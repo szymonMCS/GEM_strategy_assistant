@@ -1,5 +1,5 @@
 from datetime import datetime
-from momentum_assistant.domain import ETF
+from gem_strategy_assistant.domain import ETF
 
 STOOQ_BASE_URL = "https://stooq.pl/q/c/"
 

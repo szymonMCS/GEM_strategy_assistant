@@ -62,22 +62,8 @@ class AnalyzeAndRecommendUseCase:
             logger.error(f"❌ Analysis failed: {e}")
             raise
         
-        try:
-            end_date = datetime.now()
-            from dateutil.relativedelta import relativedelta
-            total_months = self.analysis_service.strategy.lookback_months + self.analysis_service.strategy.skip_months
-            start_date = end_date - relativedelta(months=total_months)
-            
-            price_data = self.analysis_service.market_data_provider.get_all_etf_data(
-                start_date=start_date,
-                end_date=end_date,
-                fail_fast=False
-            )
-            ranking = self.analysis_service.strategy.rank_etfs(price_data, end_date)
-            logger.info(f"Ranking: {len(ranking)} ETFs")
-        except Exception as e:
-            logger.warning(f"Could not fetch ranking: {e}")
-            ranking = []
+        # Get ranking from signal (it's already calculated)
+        ranking = [(etf, momentum) for etf, momentum in signal.ranking.rankings]
         
         research_context = None
         if include_research and ranking:
@@ -103,20 +89,20 @@ class AnalyzeAndRecommendUseCase:
             "signal": {
                 "action": signal.action,
                 "recommended_etf": signal.recommended_etf.name if signal.recommended_etf else None,
-                "date": signal.date.isoformat(),
-                "rationale": signal.rationale,
+                "date": signal.created_at.isoformat(),
+                "rationale": signal.report or "No detailed report available",
             },
             "ranking": [
                 {
                     "etf": etf.name,
                     "etf_display_name": etf.display_name,
-                    "score": round(score, 2),
+                    "score": round(score * 100, 2),  # Convert to percentage
                     "rank": idx + 1,
                 }
                 for idx, (etf, score) in enumerate(ranking)
             ],
             "metadata": {
-                "analysis_date": datetime.now().isoformat(),
+                "analysis_date": signal.created_at.isoformat(),
                 "total_etfs_analyzed": len(ranking),
                 "research_included": include_research and research_context is not None,
                 "saved_to_db": save_to_db,
@@ -161,8 +147,8 @@ class GetSignalHistoryUseCase:
                     {
                         "action": signal.action,
                         "recommended_etf": signal.recommended_etf.name if signal.recommended_etf else None,
-                        "date": signal.date.isoformat(),
-                        "rationale": signal.rationale,
+                        "date": signal.created_at.isoformat(),
+                        "rationale": signal.report or "No detailed report available",
                     }
                     for signal in signals
                 ],

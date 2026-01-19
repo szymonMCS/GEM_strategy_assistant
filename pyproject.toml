@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Semi-automated GEM ETF investment assistant with MCP"
 authors = ["Szymon Maciejewski <szymon.maciejewski.programista@gmail.com>"]
 readme = "README.md"
-packages = [{include = "momentum_assistant", from = "src"}]
+packages = [{include = "gem_strategy_assistant", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -22,10 +22,12 @@ anthropic = "^0.25"
 langgraph = "^0.2"
 langgraph-checkpoint-sqlite = "^2.0"
 mcp = "^1.0"
+fastmcp = "^0.1.0"
 gradio = "^5.0"
 plotly = "^5.22"
 click = "^8.1"
 rich = "^13.7"
+openai = "^2.15.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0"

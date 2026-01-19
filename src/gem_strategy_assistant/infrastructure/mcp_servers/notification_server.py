@@ -1,4 +1,4 @@
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 from typing import Optional
 
 from gem_strategy_assistant.infrastructure.notifications import (

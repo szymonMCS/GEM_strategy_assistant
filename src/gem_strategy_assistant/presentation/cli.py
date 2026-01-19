@@ -42,14 +42,29 @@ def analyze(no_research: bool, no_save: bool):
             )
         
         signal = result.get("signal", {})
-        action = signal.get("action", "UNKNOWN")
+        action_full = signal.get("action", "UNKNOWN")
         etf_name = signal.get("recommended_etf", "NONE")
         rationale = signal.get("rationale", "")
-        
-        action_emoji = {"BUY": "🚀", "HOLD": "✋", "SELL": "⚠️"}.get(action, "❓")
-        action_color = {"BUY": "green", "HOLD": "yellow", "SELL": "red"}.get(action, "white")
-        
-        console.print(f"\n[bold {action_color}]{action_emoji} SIGNAL: {action} {etf_name}[/bold {action_color}]")
+
+        # Parse action - it can be like "BUY EIMI", "HOLD EIMI", "SWITCH EIMI -> CNDX"
+        if "HOLD" in action_full:
+            action_type = "HOLD"
+            action_emoji = "✋"
+            action_color = "yellow"
+        elif "SWITCH" in action_full:
+            action_type = "SWITCH"
+            action_emoji = "🔄"
+            action_color = "cyan"
+        elif "BUY" in action_full:
+            action_type = "BUY"
+            action_emoji = "🚀"
+            action_color = "green"
+        else:
+            action_type = action_full
+            action_emoji = "❓"
+            action_color = "white"
+
+        console.print(f"\n[bold {action_color}]{action_emoji} SIGNAL: {action_full}[/bold {action_color}]")
         console.print(f"\n{rationale}\n")
         
         ranking = result.get("ranking", [])
@@ -137,15 +152,23 @@ def history(days: int):
         
         for s in signals:
             date = s.get("date", "")
-            action = s.get("action", "")
+            action_full = s.get("action", "")
             etf = s.get("recommended_etf", "NONE")
             rationale = s.get("rationale", "")[:50] + "..."
-            
-            action_emoji = {"BUY": "🚀", "HOLD": "✋", "SELL": "⚠️"}.get(action, "❓")
+
+            # Parse action
+            if "HOLD" in action_full:
+                action_emoji = "✋"
+            elif "SWITCH" in action_full:
+                action_emoji = "🔄"
+            elif "BUY" in action_full:
+                action_emoji = "🚀"
+            else:
+                action_emoji = "❓"
             
             table.add_row(
                 date[:10],
-                f"{action_emoji} {action}",
+                f"{action_emoji} {action_full}",
                 etf,
                 rationale
             )
