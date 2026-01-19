@@ -8,7 +8,15 @@ from gem_strategy_assistant.config import settings
 from gem_strategy_assistant.application import MomentumAgent
 
 console = Console()
-agent = MomentumAgent(checkpoint_path=settings.db_path.replace('.db', '_checkpoints.db'))
+_agent = None
+
+
+def get_agent() -> MomentumAgent:
+    """Lazy initialization of agent."""
+    global _agent
+    if _agent is None:
+        _agent = MomentumAgent(checkpoint_path=str(settings.db_path).replace('.db', '_checkpoints.db'))
+    return _agent
 
 
 @click.group()
@@ -27,7 +35,7 @@ def analyze(no_research: bool, no_save: bool):
     
     try:
         with console.status("[bold green]Running analysis..."):
-            result = agent.run_analysis(
+            result = get_agent().run_analysis(
                 include_research=not no_research,
                 max_etfs_to_research=3,
                 save_to_db=not no_save,
@@ -114,7 +122,7 @@ def history(days: int):
     console.print(f"\n[bold]📜 Signal History (last {days} days)[/bold]\n")
     
     try:
-        result = agent.get_history(days=days)
+        result = get_agent().get_history(days=days)
         
         signals = result.get("signals", [])
         if not signals:
@@ -159,7 +167,7 @@ def research(etf_name: str):
     
     try:
         with console.status("[bold green]Gathering research..."):
-            result = agent.research_etf(etf_name)
+            result = get_agent().research_etf(etf_name)
         
         etf_info = result.get("etf", {})
         research_data = result.get("research", {})
@@ -206,7 +214,7 @@ def outlook(asset_class: str, year: int):
     
     try:
         with console.status("[bold green]Gathering market outlook..."):
-            result = agent.research_market_outlook(asset_class, year)
+            result = get_agent().research_market_outlook(asset_class, year)
         
         results = result.get("results", [])
         if results:

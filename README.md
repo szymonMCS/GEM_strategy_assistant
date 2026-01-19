@@ -2,10 +2,25 @@
 
 AI-powered momentum strategy assistant for iShares ETFs using LangGraph agents and multi-source data aggregation.
 
+## Quick Start
+
+```bash
+# 1. Install dependencies
+poetry install
+
+# 2. Create .env file with your OpenAI API key
+echo "OPENAI_API_KEY=sk-your-key-here" > .env
+
+# 3. Launch dashboard
+poetry run momentum dashboard
+
+# Open http://localhost:7860 in your browser
+```
+
 ## Overview
 
 This application implements a **Global Equity Momentum (GEM) strategy** that:
-- Analyzes momentum across 4 iShares ETFs (Emerging Markets, Europe, Hedged Bonds, Global Bonds)
+- Analyzes momentum across 4 iShares ETFs (Emerging Markets, US Tech, US Bonds, Cash)
 - Ranks ETFs based on 12-month momentum (excluding current month)
 - Generates BUY/HOLD/SELL signals with AI-powered market context
 - Provides web dashboard and CLI for analysis and monitoring
@@ -36,7 +51,7 @@ This application implements a **Global Equity Momentum (GEM) strategy** that:
 ### Prerequisites
 
 - Python 3.11+
-- pip or uv package manager
+- Poetry (recommended) or pip
 
 ### Setup
 
@@ -48,14 +63,14 @@ cd gem_strategy_assistant
 
 2. Install dependencies:
 ```bash
-# Using pip
-pip install -e .
+# Using Poetry (recommended)
+poetry install
 
-# Using uv (recommended)
-uv pip install -e .
+# Or using pip
+pip install -e .
 ```
 
-3. Configure environment variables (create `.env` file):
+3. Configure environment variables (create `.env` file in project root):
 ```bash
 # Required
 OPENAI_API_KEY=sk-...
@@ -79,60 +94,68 @@ GRADIO_PORT=7860
 
 ### CLI Commands
 
+All commands use `poetry run momentum` (or just `momentum` if using Poetry shell).
+
 #### Run Analysis
 ```bash
 # Full analysis with research and database save
-gem-assistant analyze
+poetry run momentum analyze
 
 # Skip research (faster, no API costs)
-gem-assistant analyze --no-research
+poetry run momentum analyze --no-research
 
 # Don't save to database
-gem-assistant analyze --no-save
+poetry run momentum analyze --no-save
 ```
 
 #### View History
 ```bash
 # Last 30 days (default)
-gem-assistant history
+poetry run momentum history
 
 # Custom period
-gem-assistant history --days 90
+poetry run momentum history --days 90
 ```
 
 #### Research ETF
 ```bash
 # Research specific ETF
-gem-assistant research EIMI
-gem-assistant research IMEU
+poetry run momentum research EIMI
+poetry run momentum research CNDX
 ```
 
 #### Market Outlook
 ```bash
 # Default: emerging markets 2026
-gem-assistant outlook
+poetry run momentum outlook
 
 # Custom asset class and year
-gem-assistant outlook --asset-class "european equities" --year 2026
+poetry run momentum outlook --asset-class "european equities" --year 2026
 ```
 
 #### Check Status
 ```bash
 # Show configuration and available ETFs
-gem-assistant status
+poetry run momentum status
 ```
 
 #### Launch Dashboard
 ```bash
-# Start Gradio web interface
-gem-assistant dashboard
+# Start Gradio web interface (RECOMMENDED)
+poetry run momentum dashboard
+```
+
+**Tip**: Activate Poetry shell to skip `poetry run` prefix:
+```bash
+poetry shell
+momentum dashboard
 ```
 
 ### Web Dashboard
 
 Launch the Gradio interface:
 ```bash
-gem-assistant dashboard
+poetry run momentum dashboard
 ```
 
 Then open http://localhost:7860 in your browser.
@@ -168,9 +191,9 @@ print(result["research"])
 | ETF | Ticker | Description | Asset Class | Risk |
 |-----|--------|-------------|-------------|------|
 | EIMI | EIMI.L | iShares Core MSCI EM IMI | Emerging Markets | High |
-| IMEU | SMEA.L | iShares MSCI Europe | Europe | Medium |
-| AGGH | AGGH.L | iShares Core Global Aggregate Bond | Hedged Bonds | Low |
-| IBCI | IBCI.L | iShares Global Corp Bond | Global Bonds | Low |
+| CNDX | CNDX.L | iShares NASDAQ 100 | US Tech | High |
+| CBU0 | CBU0.L | iShares Treasury 7-10Y | US Bonds 7-10Y | Medium |
+| IB01 | IB01.L | iShares Treasury 0-1Y | Cash Equivalent | Low |
 
 ## Momentum Strategy (12M - 1M)
 
