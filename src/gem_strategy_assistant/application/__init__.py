@@ -9,6 +9,8 @@ from .use_cases import (
     ResearchETFUseCase,
     ResearchMarketOutlookUseCase,
 )
+from .mcp_client import MCPClientAdapter
+from .agent import MomentumAgent
 
 __all__ = [
     "AnalysisService",
@@ -18,4 +20,6 @@ __all__ = [
     "GetSignalHistoryUseCase",
     "ResearchETFUseCase",
     "ResearchMarketOutlookUseCase",
+    "MCPClientAdapter",
+    "MomentumAgent",
 ]

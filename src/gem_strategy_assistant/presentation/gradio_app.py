@@ -9,7 +9,15 @@ from gem_strategy_assistant.application import (
     GetSignalHistoryUseCase,
 )
 
-agent = MomentumAgent(checkpoint_path=settings.db_path.replace('.db', '_checkpoints.db'))
+_agent = None
+
+
+def get_agent() -> MomentumAgent:
+    """Lazy initialization of agent."""
+    global _agent
+    if _agent is None:
+        _agent = MomentumAgent(checkpoint_path=str(settings.db_path).replace('.db', '_checkpoints.db'))
+    return _agent
 
 
 def run_analysis(include_research: bool = True, save_to_db: bool = True) -> tuple[str, str, str, str, str]:
@@ -20,7 +28,7 @@ def run_analysis(include_research: bool = True, save_to_db: bool = True) -> tupl
         (signal_md, ranking_md, research_md, metadata_md, period_info)
     """
     try:
-        result = agent.run_analysis(
+        result = get_agent().run_analysis(
             include_research=include_research,
             max_etfs_to_research=3,
             save_to_db=save_to_db,
@@ -100,7 +108,7 @@ def run_analysis(include_research: bool = True, save_to_db: bool = True) -> tupl
 def get_history(days: int = 30) -> str:
     """Get signal history via agent."""
     try:
-        result = agent.get_history(days=days)
+        result = get_agent().get_history(days=days)
         
         signals = result.get("signals", [])
         if not signals:
@@ -130,7 +138,7 @@ def research_etf_ui(etf_name: str) -> str:
         return "Please enter an ETF name"
     
     try:
-        result = agent.research_etf(etf_name)
+        result = get_agent().research_etf(etf_name)
         
         etf_info = result.get("etf", {})
         research = result.get("research", {})
@@ -248,9 +256,9 @@ def create_dashboard() -> gr.Blocks:
 | ETF | Ticker | Asset Class | Risk |
 |-----|--------|-------------|------|
 | EIMI | {ETF.EIMI.ticker_yfinance} | {ETF.EIMI.asset_class} | {ETF.EIMI.risk_level} |
-| IMEU | {ETF.IMEU.ticker_yfinance} | {ETF.IMEU.asset_class} | {ETF.IMEU.risk_level} |
-| AGGH | {ETF.AGGH.ticker_yfinance} | {ETF.AGGH.asset_class} | {ETF.AGGH.risk_level} |
-| IBCI | {ETF.IBCI.ticker_yfinance} | {ETF.IBCI.asset_class} | {ETF.IBCI.risk_level} |
+| CNDX | {ETF.CNDX.ticker_yfinance} | {ETF.CNDX.asset_class} | {ETF.CNDX.risk_level} |
+| CBU0 | {ETF.CBU0.ticker_yfinance} | {ETF.CBU0.asset_class} | {ETF.CBU0.risk_level} |
+| IB01 | {ETF.IB01.ticker_yfinance} | {ETF.IB01.asset_class} | {ETF.IB01.risk_level} |
 
 ## Momentum Strategy (12M - 1M)
 
