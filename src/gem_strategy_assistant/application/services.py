@@ -118,14 +118,21 @@ class ResearchService:
     ):
         """
         Initialize research service.
-        
+
         Args:
             search_provider: Search provider (default: CompositeSearchProvider)
-            cache_repository: Cache repository (default: ResearchCacheRepository)
+            cache_repository: Cache repository (default: ResearchCacheRepository with default DB)
         """
         self.search_provider = search_provider or CompositeSearchProvider()
+
+        if cache_repository is None:
+            from gem_strategy_assistant.infrastructure.persistence import Database
+            from gem_strategy_assistant.config import settings
+            db = Database(db_path=str(settings.db_path))
+            cache_repository = ResearchCacheRepository(db=db)
+
         self.cache_repository = cache_repository
-        
+
         logger.info("ResearchService initialized")
 
     def research_etf(self, etf: ETF, use_cache: bool = True) -> dict:
@@ -218,11 +225,17 @@ class SignalPersistenceService:
     def __init__(self, signal_repository: Optional[SignalRepository] = None):
         """
         Initialize signal persistence service.
-        
+
         Args:
-            signal_repository: Signal repository (default: SignalRepository)
+            signal_repository: Signal repository (default: SignalRepository with default DB)
         """
-        self.signal_repository = signal_repository or SignalRepository()
+        if signal_repository is None:
+            from gem_strategy_assistant.infrastructure.persistence import Database
+            from gem_strategy_assistant.config import settings
+            db = Database(db_path=str(settings.db_path))
+            signal_repository = SignalRepository(db=db)
+
+        self.signal_repository = signal_repository
         logger.info("SignalPersistenceService initialized")
 
     def save_signal(self, signal: Signal, ranking: list[tuple[ETF, float]]) -> None:
