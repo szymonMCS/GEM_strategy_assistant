@@ -33,10 +33,25 @@ class Database:
             """)
             
             conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_signals_created_at 
+                CREATE INDEX IF NOT EXISTS idx_signals_created_at
                 ON signals(created_at DESC)
             """)
-            
+
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS research_cache (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    etf_name TEXT NOT NULL UNIQUE,
+                    research_data TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    expires_at TEXT NOT NULL
+                )
+            """)
+
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_research_cache_etf
+                ON research_cache(etf_name)
+            """)
+
             conn.commit()
     
     @contextmanager
