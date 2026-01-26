@@ -9,7 +9,7 @@ from tenacity import (
     before_sleep_log
 )
 
-from momentum_assistant.config import settings
+from gem_strategy_assistant.config import settings
 
 logger = logging.getLogger(__name__)
 

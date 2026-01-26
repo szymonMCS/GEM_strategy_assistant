@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from momentum_assistant.domain import Signal, ETF
+from gem_strategy_assistant.domain import Signal, ETF
 from .openai_client import OpenAIClient, LLMError
 
 logger = logging.getLogger(__name__)

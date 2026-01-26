@@ -1,4 +1,5 @@
 import logging
+from dataclasses import replace
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -92,6 +93,8 @@ class AnalysisService:
         
         try:
             signal = self.strategy.generate_signal(ranking)
+            report = self.strategy.get_explanation(signal)
+            signal = replace(signal, report=report)
             logger.info(
                 f"✅ Analysis complete: {signal.recommended_etf.name if signal.recommended_etf else 'NONE'}"
             )
@@ -149,10 +152,7 @@ class ResearchService:
         logger.info(f"Researching ETF: {etf.name}")
         
         if use_cache and self.cache_repository:
-            cached = self.cache_repository.get_cached_research(
-                etf_name=etf.name,
-                max_age_hours=24
-            )
+            cached = self.cache_repository.get(etf_name=etf.name)
             if cached:
                 logger.info(f"Using cached research for {etf.name}")
                 return cached
@@ -164,7 +164,7 @@ class ResearchService:
             )
             
             if self.cache_repository:
-                self.cache_repository.save_research(etf.name, context)
+                self.cache_repository.set(etf.name, context)
             
             logger.info(f"✅ Research complete for {etf.name}: {context['total_results']} results")
             return context

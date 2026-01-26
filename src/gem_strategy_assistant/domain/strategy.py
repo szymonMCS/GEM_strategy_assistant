@@ -145,7 +145,7 @@ class MomentumStrategy:
         
         lines = [
             f"## Analiza Momentum",
-            f"**Okres:** {ranking.period_start.strftime('%Y-%m-%d')} → "
+            f"**Okres:** {ranking.period_start.strftime('%Y-%m-%d')} -> "
             f"{ranking.period_end.strftime('%Y-%m-%d')}",
             "",
             "### Ranking:",

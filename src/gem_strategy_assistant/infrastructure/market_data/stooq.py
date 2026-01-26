@@ -4,8 +4,8 @@ from io import StringIO
 import httpx
 import pandas as pd
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, before_sleep_log
-from momentum_assistant.domain import ETF, PriceData
-from momentum_assistant.config import get_stooq_ticker
+from gem_strategy_assistant.domain import ETF, PriceData
+from gem_strategy_assistant.config import get_stooq_ticker
 
 logger = logging.getLogger(__name__)
 
